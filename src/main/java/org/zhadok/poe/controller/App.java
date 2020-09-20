@@ -12,77 +12,82 @@ import org.zhadok.poe.controller.util.Util;
  * This class shows how to use the event queue system in JInput. It will show
  * how to get the controllers, how to get the event queue for a controller, and
  * how to read and process events from the queue.
- * 
+ *
  * @author Endolf
  */
 public class App implements Loggable {
 
 	/**
-	 * Setting the path to native files: 
+	 * Setting the path to native files:
 	 * https://github.com/jinput/jinput/issues/42
 	 */
 	static {
-		String libraryPath = new File("poe-controller-files/lib").getAbsolutePath(); 
+		String libraryPath = new File("poe-controller-files/lib").getAbsolutePath();
 		System.out.println("Setting net.java.games.input.librarypath=" + libraryPath);
 		System.setProperty("net.java.games.input.librarypath", libraryPath);
 	}
-	
-	public static int verbosity = Constants.DEFAULT_VERBOSITY; 
+
+	public static int verbosity = Constants.DEFAULT_VERBOSITY;
+	public static int controllerId = 0;
 //	private static boolean running = false;
-	
+
 	public int getVerbosity() {
-		return verbosity; 
+		return verbosity;
 	}
-	
-	
+
+
 	private static ConfigMappingUi startConfigMappingUI(ControllerEventHandler eventHandler) {
 		ConfigMappingUi window = new ConfigMappingUi(eventHandler);
 		java.awt.EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					window.initialize(); 
+					window.initialize();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
-		return window; 
+		return window;
 	}
-	
+
 	/**
 	 * @param args
 	 * @throws AWTException
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws AWTException, IOException {
-		Util.ensureProjectDirExists(); 
-		Loggable.writeLogsToFile(Constants.FILE_LOG); 
-		
-		Util.getJavaRuntime().forEach(detail -> System.out.println(detail)); 
-		
-		JInputLib lib = new JInputLib();
-		lib.prepare(); 
+		Util.ensureProjectDirExists();
+		Loggable.writeLogsToFile(Constants.FILE_LOG);
 
-		ControllerEventHandler eventHandler = new ControllerEventHandler(); 
+		Util.getJavaRuntime().forEach(detail -> System.out.println(detail));
+
+		JInputLib lib = new JInputLib();
+		lib.prepare();
+
+		ControllerEventHandler eventHandler = new ControllerEventHandler();
 		if (System.getProperty("verbosity") != null) {
-			App.verbosity = Integer.valueOf(System.getProperty("verbosity")); 
+			App.verbosity = Integer.valueOf(System.getProperty("verbosity"));
 			eventHandler.log(0, "Setting verbosity to " + verbosity);
 		}
 		else {
 			eventHandler.log(0, "Setting verbosity to " + verbosity + " (default value)");
 		}
-		eventHandler.resetControllerMappingListener();
-		ConfigMappingUi window = startConfigMappingUI(eventHandler); 
-		eventHandler.registerEventListener(window);
-		
-		if (Util.isJava32Bit()) {
-			eventHandler.log(1, "WARNING: You appear to be using 32-bit Java. If the program crashes please try " + 
-					   "uninstalling 32-bit Java and installing 64-bit Java."); 
+		if (System.getProperty("controllerId") != null) {
+			App.controllerId = Integer.valueOf(System.getProperty("controllerId"));
+			eventHandler.log(0, "Setting controllerID to " + controllerId);
 		}
-		
-		eventHandler.startPolling(); 
+		eventHandler.resetControllerMappingListener();
+		ConfigMappingUi window = startConfigMappingUI(eventHandler);
+		eventHandler.registerEventListener(window);
+
+		if (Util.isJava32Bit()) {
+			eventHandler.log(1, "WARNING: You appear to be using 32-bit Java. If the program crashes please try " +
+					   "uninstalling 32-bit Java and installing 64-bit Java.");
+		}
+
+		eventHandler.startPolling();
 	}
 
-	
-	
+
+
 }

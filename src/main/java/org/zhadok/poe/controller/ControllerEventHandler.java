@@ -23,69 +23,75 @@ public class ControllerEventHandler implements Loggable {
 	/**
 	 * Poll interval (in milliseconds) for controller changes
 	 */
-	public final int POLL_CONTROLLER_INTERVAL_MS = 20; 
+	public final int POLL_CONTROLLER_INTERVAL_MS = 20;
 
 	private boolean isPolling = false;
-	private List<ControllerEventListener> controllerEventListeners = new ArrayList<>(); 
-	private TemporaryControllerEventListener temporaryEventListener = null; 	
-	private long lastEventTimestamp = -1; 
-	
+	private List<ControllerEventListener> controllerEventListeners = new ArrayList<>();
+	private TemporaryControllerEventListener temporaryEventListener = null;
+	private long lastEventTimestamp = -1;
+
 	public void registerEventListener(ControllerEventListener listener) {
 		this.controllerEventListeners.add(listener);
 	}
-	
+
 	public void notifyControllerEventListeners(Event event) {
 		controllerEventListeners.forEach((listener) -> listener.handleEvent(event));
 	}
-	
+
 	/**
 	 * Unregisters all listeners of instance ControllerOutputMapper and resets all macros
 	 */
 	public void resetControllerMappingListener() {
-		this.controllerEventListeners.removeIf((listener) -> listener instanceof ControllerOutputMapper); 
+		this.controllerEventListeners.removeIf((listener) -> listener instanceof ControllerOutputMapper);
 		Macro.resetMacros();
 		this.registerEventListener(new ControllerOutputMapper());
 	}
-	
+
 	public void triggerApplicationExit() {
 		this.controllerEventListeners.forEach(listener -> {
 			listener.handleApplicationExit();
 		});
 	}
-	
+
 	/**
 	 * For the next n events, only this listener will be called
 	 */
 	public void registerTemporaryListener(TemporaryControllerEventListener listener) {
-		this.temporaryEventListener = listener; 
-	}	
-	
+		this.temporaryEventListener = listener;
+	}
+
 	public void unregisterTemporaryListener() {
 		this.temporaryEventListener = null;
 	}
-	
+
 	public void startPolling() {
 		if (this.isPolling == true) {
-			return; 
+			return;
 		}
-		
+		Controller[] controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
+		for (int i = 0; i < controllers.length; i++) {
+			System.out.println(i + " " + controllers[i]);
+		}
+
 		this.isPolling = true;
-		log(1, "Started polling for controller changes"); 
+		log(1, "Started polling for controller changes");
 		while (isPolling == true) {
 			/* Get the available controllers */
-			Controller[] controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
-			
+			controllers = ControllerEnvironment.getDefaultEnvironment().getControllers();
+			// for (int i = 0; i < controllers.length; i++) {
+			// 	System.out.println(i + " " + controllers[i]);
+			// }
 			if (controllers.length == 0) {
 				System.out.println("Found no controllers.");
 				System.exit(0);
 			}
 
-			for (int i = 0; i < controllers.length; i++) {
+			// for (int i = 0; i < controllers.length; i++) {
 				/* Remember to poll each one */
-				
-				if (controllers[i].poll()) {
+
+				if (controllers[App.controllerId].poll()) {
 					/* Get the controllers event queue */
-					EventQueue queue = controllers[i].getEventQueue();
+					EventQueue queue = controllers[App.controllerId].getEventQueue();
 
 					/* Create an event object for the underlying plugin to populate */
 					Event event = new Event();
@@ -95,7 +101,7 @@ public class ControllerEventHandler implements Loggable {
 						this.handleEvent(event);
 					}
 				}
-			}
+			// }
 
 			/*
 			 * Sleep for 20 milliseconds, in here only so the example doesn't
@@ -108,33 +114,33 @@ public class ControllerEventHandler implements Loggable {
 			}
 		}
 	}
-	
+
 	public void stopPolling() {
 		if (this.isPolling == true) {
-			log(1, "Stopped polling for controller changes"); 
+			log(1, "Stopped polling for controller changes");
 			this.isPolling = false;
 		}
 	}
-	
+
 	public boolean isEventMouseMovement(Event event) {
-		return "net.java.games.input.RawMouse$Axis".equals(event.getComponent().getClass().getName()) || 
-			   "net.java.games.input.RawMouse$Button".equals(event.getComponent().getClass().getName()); 
+		return "net.java.games.input.RawMouse$Axis".equals(event.getComponent().getClass().getName()) ||
+			   "net.java.games.input.RawMouse$Button".equals(event.getComponent().getClass().getName());
 	}
-	
+
 	private void handleEvent(Event event) {
 		if (isEventMouseMovement(event)) {
-			return; 
+			return;
 		}
-		
+
 		if (getVerbosity() >= 3) {
 			StringBuffer buffer = new StringBuffer();
 			//buffer.append(event.getNanos()).append(", ");
 			Component comp = event.getComponent();
 			buffer.append(comp.getName());
 			buffer.append(" (id=" + comp.getIdentifier() + ")");
-			buffer.append(": "); 
+			buffer.append(": ");
 			float value = event.getValue();
-			
+
 			/*
 			 * Check the type of the component and display an
 			 * appropriate value
@@ -148,30 +154,30 @@ public class ControllerEventHandler implements Loggable {
 					buffer.append("Off (value=" + value + ")");
 				}
 			}
-			long timestamp = event.getNanos(); 
-			
-			long diffMS = (timestamp - lastEventTimestamp) / 1000000; 
-			buffer.append(". ").append(diffMS).append("ms since last event"); 
-			this.lastEventTimestamp = timestamp; 
-			
+			long timestamp = event.getNanos();
+
+			long diffMS = (timestamp - lastEventTimestamp) / 1000000;
+			buffer.append(". ").append(diffMS).append("ms since last event");
+			this.lastEventTimestamp = timestamp;
+
 			log(3, buffer.toString());
 		}
-		
-		
+
+
 		if (this.temporaryEventListener != null) {
 			// If a single event listener is registered for next event (e.g. UI)
 			// Only notify that listener
 			this.temporaryEventListener.handleEvent(event);
-			
+
 			if (this.temporaryEventListener != null && this.temporaryEventListener.hasReceivedAllEvents()) {
 				this.temporaryEventListener = null;
 			}
 		} else {
-			this.notifyControllerEventListeners(event); 
+			this.notifyControllerEventListeners(event);
 		}
 	}
 
-	
-	
-	
+
+
+
 }

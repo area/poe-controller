@@ -11,138 +11,144 @@ import net.java.games.input.Event;
 
 public class ActionHandlerMouse extends ActionHandler {
 
-	private Random random; 
+	private Random random;
 	boolean haveNextNextGaussian = false;
-	double nextNextGaussian;  
-	
+	double nextNextGaussian;
+
 	public ActionHandlerMouse(Robot robot) {
 		super(robot);
-		log(1, "Initializing ActionHandlerMouse..."); 
-		this.random = new Random(); 
+		log(1, "Initializing ActionHandlerMouse...");
+		this.random = new Random();
 	}
 
 	@Override
 	public void handleAction(Event event, Mapping mapping) {
-		log(3, "Handling event with mapping=" + mapping.toString()); 
-		
+		log(3, "Handling event with mapping=" + mapping.toString());
+
 		switch (mapping.getAction().getMouseAction()) {
-		case LEFT_CLICK: 
-			this.mouseLeftClick(); 
-			break; 
-		case LEFT_PRESS: 
-			this.mouseLeftPress(); 
-			break; 
+		case LEFT_CLICK:
+			this.mouseLeftClick();
+			break;
+		case LEFT_PRESS:
+			this.mouseLeftPress();
+			break;
 		case LEFT_RELEASE:
 			this.mouseLeftRelease();
-			break; 
-		case RIGHT_CLICK: 
-			this.mouseRightClick(event); 
-			break; 
+			break;
+		case RIGHT_CLICK:
+			this.mouseRightClick(event);
+			break;
 		case RIGHT_PRESS:
-			this.mouseRightPress(); 
-			break; 
+			this.mouseRightPress();
+			break;
 		case RIGHT_RELEASE:
 			this.mouseRightRelease();
 			break;
-		case MIDDLE_CLICK: 
-			this.mouseMiddleClick(); 
-		default: 
-			throw new NotImplementedException("Mouse action '" + mapping.getAction().getMouseAction() + "' not implemented!"); 
+		case MIDDLE_CLICK:
+			this.mouseMiddleClick();
+		default:
+			throw new NotImplementedException("Mouse action '" + mapping.getAction().getMouseAction() + "' not implemented!");
 		}
 	}
 
 	public int getRandom(double min, double max) {
 		return (int) (random.nextInt((int) (max - min + 1)) + min);
 	}
-	
+
 	/**
 	 * Delay between mouse down and mouse release
-	 * 
+	 *
 	 * http://instantclick.io/click-test says between 70ms and 90s
 	 * @return
 	 */
 	public int getDelayMSMousePressAndRelease() {
-		return getRandom(70, 90); 
+		return getRandom(70, 90);
 	}
-	
+
 	public void mouseLeftPress() {
 		if (!this.isInterrupted()) {
 			robot.mousePress(InputEvent.BUTTON1_MASK);
-			log(2, "Mouse left press"); 
+			log(2, "Mouse left press");
 		}
+		log(2, "whee");
 	}
 	public void mouseLeftRelease() {
+		log(2, "releasestart");
 		if (!this.isInterrupted()) {
 			this.robot.mouseRelease(InputEvent.BUTTON1_MASK);
-			log(2, "Mouse left release"); 
+			log(2, "Mouse left release");
 		}
+		log(2, "releaseend");
 	}
-	
+
 	public void mouseLeftClick() {
 		// Release first
-		//this.mouseLeftRelease(); 
-		
-		this.mouseLeftPress();		
+		// this.mouseLeftRelease();
+
+		log(2, "about to press");
+		this.mouseLeftPress();
+		log(2, "about to sleep");
 		this.sleep(getDelayMSMousePressAndRelease());
-		this.mouseLeftRelease(); 
+		log(2, "about to release");
+		this.mouseLeftRelease();
 	}
-	
-	
+
+
 	public void mouseRightClick() {
 		if (this.isInterrupted())
-			return; 
-		
+			return;
+
 		robot.mousePress(InputEvent.BUTTON3_MASK);
 		this.sleep(getDelayMSMousePressAndRelease());
 		robot.mouseRelease(InputEvent.BUTTON3_MASK);
 	}
-	
+
 	public void mouseRightClick(Event event) {
 		if (this.isInterrupted())
-			return; 
-		
+			return;
+
 		if (event.getValue() > 0f) {
 			robot.mousePress(InputEvent.BUTTON3_MASK);
 			this.sleep(getDelayMSMousePressAndRelease());
 			robot.mouseRelease(InputEvent.BUTTON3_MASK);
 		}
 		else {
-			
-		}
-	}
-	
-	public void mouseRightPress() {
-		if (!this.isInterrupted()) {
-			robot.mousePress(InputEvent.BUTTON3_MASK);
-			log(2, "Mouse right press"); 
-		}
-	}
-	
-	public void mouseRightRelease() {
-		if (!this.isInterrupted()) {
-			this.robot.mouseRelease(InputEvent.BUTTON3_MASK);
-			log(2, "Mouse right release"); 
+
 		}
 	}
 
-	
-	private void mouseMiddleClick() {
-		this.mouseMiddlePress();		
-		this.sleep(getDelayMSMousePressAndRelease());
-		this.mouseMiddleRelease(); 
+	public void mouseRightPress() {
+		if (!this.isInterrupted()) {
+			robot.mousePress(InputEvent.BUTTON3_MASK);
+			log(2, "Mouse right press");
+		}
 	}
-	
+
+	public void mouseRightRelease() {
+		if (!this.isInterrupted()) {
+			this.robot.mouseRelease(InputEvent.BUTTON3_MASK);
+			log(2, "Mouse right release");
+		}
+	}
+
+
+	private void mouseMiddleClick() {
+		this.mouseMiddlePress();
+		this.sleep(getDelayMSMousePressAndRelease());
+		this.mouseMiddleRelease();
+	}
+
 	private void mouseMiddlePress() {
 		if (!this.isInterrupted()) {
 			robot.mousePress(InputEvent.BUTTON2_MASK);
-			log(2, "Mouse middle press"); 
+			log(2, "Mouse middle press");
 		}
 	}
-	
+
 	private void mouseMiddleRelease() {
 		if (!this.isInterrupted()) {
 			this.robot.mouseRelease(InputEvent.BUTTON2_MASK);
-			log(2, "Mouse middle release"); 
+			log(2, "Mouse middle release");
 		}
 	}
 
@@ -152,5 +158,5 @@ public class ActionHandlerMouse extends ActionHandler {
 		this.mouseMiddleRelease();
 		this.mouseRightRelease();
 	}
-	
+
 }
